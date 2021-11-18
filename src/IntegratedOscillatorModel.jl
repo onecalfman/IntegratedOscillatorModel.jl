@@ -299,6 +299,93 @@ function parse_medications(i)
     end
 end
 
+function pfk_activity(atp,adp,f6p,fbp,amp, params)
+	# (alpha,beta,gamma,delta);
+	# (0,0,0,0);
+    
+	weight1=1;
+	topa1=0;
+	bottom1=1;
+	
+	# (0,0,0,1);
+	weight2=atp^2/params["k4"];
+	topa2=topa1;
+	bottom2=bottom1+weight2;
+	
+	# (0,0,1,0);
+	weight3=f6p^2/params["k3"];
+	topa3=topa2+weight3;
+	bottom3=bottom2+weight3;
+	
+	# (0,0,1,1);
+	weight4=(f6p*atp)^2/(params["fatp"]*params["k3"]*params["k4"]);
+	topa4=topa3+weight4;
+	bottom4=bottom3+weight4;
+	
+	# (0,1,0,0);
+	weight5=fbp/params["k2"];
+	topa5=topa4;
+	bottom5=bottom4+weight5;
+	
+	# (0,1,0,1)
+	weight6=(fbp*atp^2)/(params["k2"]*params["k4"]*params["fbt"]);
+	topa6=topa5;
+	bottom6=bottom5+weight6;
+	
+	# (0,1,1,0)
+	weight7=(fbp*f6p^2)/(params["k2"]*params["k3"]*params["ffbp"]);
+	topa7=topa6+weight7;
+	bottom7=bottom6+weight7;
+	
+	# (0,1,1,1)
+	weight8=(fbp*f6p^2*atp^2)/(params["k2"]*params["k3"]*params["k4"]*params["ffbp"]*params["fbt"]*params["fatp"]);
+	topa8=topa7+weight8;
+	bottom8=bottom7+weight8;
+	
+	# (1,0,0,0);
+	weight9=amp/params["k1"];
+	topa9=topa8;
+	bottom9=bottom8+weight9;
+	
+	# (1,0,0,1);
+	weight10=(amp*atp^2)/(params["k1"]*params["k4"]*params["fmt"]);
+	topa10=topa9;
+	bottom10=bottom9+weight10;
+	
+	# (1,0,1,0);
+	weight11=(amp*f6p^2)/(params["k1"]*params["k3"]*params["famp"]);
+	topa11=topa10+weight11;
+	bottom11=bottom10+weight11;
+	
+	# (1,0,1,1);
+	weight12=(amp*f6p^2*atp^2)/(params["k1"]*params["k3"]*params["k4"]*params["famp"]*params["fmt"]*params["fatp"]);
+	topa12=topa11+weight12;
+	bottom12=bottom11+weight12;
+	
+	# (1,1,0,0)
+	weight13=(amp*fbp)/(params["k1"]*params["k2"]);
+	topa13=topa12;
+	bottom13=bottom12+weight13;
+	
+	# (1,1,0,1);
+	weight14=(amp*fbp*atp^2)/(params["k1"]*params["k2"]*params["k4"]*params["fbt"]*params["fmt"]);
+	topa14=topa13;
+	bottom14=bottom13+weight14;
+	
+	# (1,1,1,0) -- the most active state of the enzyme;
+	weight15=(amp*fbp*f6p^2)/(params["k1"]*params["k2"]*params["k3"]*params["ffbp"]*params["famp"]);
+	topa15=topa14;
+	topb=weight15;
+	bottom15=bottom14+weight15;
+	
+	# (1,1,1,1);
+	weight16=(amp*fbp*f6p^2*atp^2)/(params["k1"]*params["k2"]*params["k3"]*params["k4"]*params["ffbp"]*params["famp"]*params["fbt"]*params["fmt"]*params["fatp"]);
+	topa16=topa15+weight16;
+	bottom16=bottom15+weight16;
+	
+	Jpfk= params["vpfk"]*(topb + params["kpfk"]*topa16)/bottom16;
+end
+
 function sys(dy, y, params, t)
     #v, n, c, cer, cam, adp, f6p, fbp = y
 
