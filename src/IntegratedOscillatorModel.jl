@@ -2,6 +2,24 @@ __precompile__()
 
 module IntegratedOscillatorModel
 
+export simulate
+export loopvals
+export labels
+export y0
+export sys
+export pfk_activity
+export params
+export sortedvalues
+export rowtocolumn
+export max
+export min
+export vecdiff
+export vkf
+export cycle
+export Med
+export MedExp
+
+
 import Base.sort
 import Base.max
 import Base.min
