@@ -18,6 +18,8 @@ export vkf
 export cycle
 export Med
 export MedExp
+export trysolve
+export sys_const_pfk
 
 
 import Base.sort
