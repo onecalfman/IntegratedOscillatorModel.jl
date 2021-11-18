@@ -492,6 +492,33 @@ end
 const labels = [L"V" L"N" L"Ca" L"Ca_{er}" L"Ca_m" "ADP" "F6P" "FBP"];
 const y0 = [-60; 0; 0.1; 185; 100; 780; 60; 40];
 
+function trysolve(system, callback, iteration)
+    tol = 1e-1^(iteration*6)
+    backup = deepcopy(system)
+    problem = ODEProblem(system.ode_func, system.y0, (0.0, system.time), system.params)
+    if tol <= 1e-19
+        return nothing
+    end
+    try
+        cb = (callback) ? PeriodicCallback(parse_medications, 100) : nothing
+        return solve(problem,
+                Tsit5(),
+                saveat   = 10,
+                maxiters = 1e7,
+                reltol   = tol,
+                abstol   = tol,
+                callback = cb
+        )
+    catch err
+        if isa(err, DomainError)
+            return trysolve(backup, callback, iteration+1)
+        else
+            println(err)
+        end
+    end
+end
+
+
 function simulate(system; iteration = 1)
     if :change_params ∈ keys(system)
         for (key,val) ∈ system.change_params
