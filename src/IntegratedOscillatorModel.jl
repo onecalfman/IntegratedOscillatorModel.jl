@@ -627,23 +627,23 @@ function simulate(system; iteration = 1)
         solution_plot = plot(
             solution.t/6000, 
             matrix[system.plot_params];
-            label = hcat(labels[settings.plot_params]...),
+            label = hcat(labels[system.plot_params]...),
             system.plot_args...)
     else
         solution_plot = plot(solution.t/6000, matrix;
-            label = hcat(labels[settings.plot_params]...),
+            label = hcat(labels[system.plot_params]...),
             system.plot_args...)
     end
     return (solution, matrix, solution_plot)
 end
 
-function loopvals(key::String, vals::Array, settings)
+function loopvals(key::String, vals::Array, system)
     sols = Dict()
     sols_mat = Dict()
     plots = Dict()
     
     @threads for val ∈ vals
-        local s = deepcopy(settings)
+        local s = deepcopy(system)
         s.params[key] = val
         s.plot_args[:title] = key * " = " * string(val)
         try
@@ -658,12 +658,12 @@ function loopvals(key::String, vals::Array, settings)
     acc_plot = plot(
         sortedvalues(plots)...,
         dpi=300,
-        label = hcat(labels[settings.plot_params]...),
+        label = hcat(labels[system.plot_params]...),
     )
     return (sols, sols_mat, plots, acc_plot)
 end
 
-function loopvals(key1::String, vals1::Vector, key2::String, vals2::Vector, settings)
+function loopvals(key1::String, vals1::Vector, key2::String, vals2::Vector, system)
     local sols::Dict{Any, Dict}     = Dict()
     local sols_mat::Dict{Any, Dict} = Dict()
     local plots::Dict{Any, Dict}    = Dict()
@@ -675,7 +675,7 @@ function loopvals(key1::String, vals1::Vector, key2::String, vals2::Vector, sett
             plots[val1] = Dict()
         @threads for val2 ∈ vals2
         #for val2 ∈ vals2
-            local s = deepcopy(settings)
+            local s = deepcopy(system)
             s.params[key1] = val1
             s.params[key2] = val2
             s.plot_args[:title] = key1 * " = " * string(val1) * ", " * key2 * " = " * string(val2)
@@ -692,7 +692,7 @@ function loopvals(key1::String, vals1::Vector, key2::String, vals2::Vector, sett
     acc_plot = plot(
         sortedvalues(plots)...,
         dpi=300,
-        label = hcat(labels[settings.plot_params]...),
+        label = hcat(labels[system.plot_params]...),
     )
     
     return (sols, sols_mat, plots, acc_plot)
