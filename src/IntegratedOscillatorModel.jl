@@ -602,7 +602,7 @@ function trysolve(system, callback, iteration)
         cb = (callback) ? PeriodicCallback(parse_medications, 100) : nothing
         return solve(problem,
                 Tsit5(),
-                saveat   = 10,
+                saveat   = 1,
                 maxiters = 1e7,
                 reltol   = tol,
                 abstol   = tol,
