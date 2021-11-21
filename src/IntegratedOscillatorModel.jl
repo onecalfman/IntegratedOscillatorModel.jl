@@ -20,6 +20,7 @@ export Med
 export MedExp
 export trysolve
 export sys_const_pfk
+export Plots
 
 
 import Base.sort
@@ -28,9 +29,9 @@ import Base.min
 
 using Base.Threads
 using LaTeXStrings
-using Plots.Measures
 using DifferentialEquations
 using Plots; gr();
+using Plots.Measures
 using DataStructures
 
 Plots.theme(:default)
