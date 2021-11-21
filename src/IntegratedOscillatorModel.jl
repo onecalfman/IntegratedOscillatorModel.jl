@@ -22,6 +22,8 @@ export ExpMed
 export trysolve
 export sys_const_pfk
 export Plots
+export plot
+export mm
 
 
 import Base.sort
