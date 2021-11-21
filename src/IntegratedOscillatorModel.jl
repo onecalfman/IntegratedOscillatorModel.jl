@@ -18,7 +18,7 @@ export vecdiff
 export vkf
 export cycle
 export Med
-export MedExp
+export ExpMed
 export trysolve
 export sys_const_pfk
 export Plots
