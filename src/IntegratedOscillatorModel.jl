@@ -580,7 +580,6 @@ end
 
 const labels = [L"V" L"N" L"Ca" L"Ca_{er}" L"Ca_m" "ADP" "F6P" "FBP"];
 const y0 = [-60; 0; 0.1; 185; 100; 780; 60; 40];
-const y0_stat = 
 const y0_stat = [ -60.486843436763024
                     0.0001367295835481462
                     0.06376844044216665
@@ -588,7 +587,7 @@ const y0_stat = [ -60.486843436763024
                    25.57114498828348
                   809.2663464858219
                     9.141692725854208
-                    4.432631767186038e-6 ]
+                    4.432631767186038e-6 ];
 
 function trysolve(system, callback, iteration)
     tol = 1e-1^(iteration*6)
