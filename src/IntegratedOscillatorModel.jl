@@ -603,7 +603,7 @@ function trysolve(system, callback, iteration)
         return solve(problem,
                 Tsit5(),
                 saveat   = 1,
-                maxiters = 1e7,
+                maxiters = 1e6,
                 reltol   = tol,
                 abstol   = tol,
                 callback = cb
