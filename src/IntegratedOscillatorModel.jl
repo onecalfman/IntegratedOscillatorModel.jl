@@ -260,7 +260,7 @@ function handle_medication(med, i::Any)
                 i.p["kserca"] = params["kserca"]
             end
     elseif med.type ≡ "KCl"
-            i.p["vk"] = vkf((med.dose > 4.8) ? med.dose : 4.8, 220)
+            i.p["vk"] = vkf((med.dose > 4.8) ? med.dose : 4.8, 130)
     elseif med.type ≡ "nifedipin"
         Bool(med.dose) ? i.p["gca"] = 500 : i.p["gca"] = 1000
     elseif med.type ≡ "glucose"
