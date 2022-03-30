@@ -2,7 +2,7 @@
 # Background
 This module was made during my bachelors thesis. It implements a mathematical model developed 
 the following publication [McKenna et. al 2016](https://doi.org/10.1016/j.bpj.2015.11.3526)
-The specific model used here is the same as in [Marinelli et. al 2018](htpps://doi.org/10.1016/j.jtbi.2018.06.017)
+The specific model used here is the same as in [Marinelli et. al 2018](https://doi.org/10.1016/j.jtbi.2018.06.017)
 The model describes the flux ot certain ions and molecules seen in the beta-cell in the human
 pancreas. This is done by a non linear system of first order differential equations and it's
 goal is to get insights about the insulin exostosis.
@@ -97,7 +97,7 @@ The consist of
 The available stimulants are
 - tolbutamid
 - gkatpbar (maximal conductance of atp dependent k channels)
-- Dz ()
+- Dz (Diazoxide)
 - glucose
 - kserca (serca pump rate ca2+ er)
 - KCl
