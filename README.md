@@ -110,4 +110,25 @@ Additional types of stimulants can be added in the "handle_medication" function.
 The simulate function takes a settings dict or named tuple.
 It returns a tuple of the form
 
-    ()
+    (ODESolution, matrix of solutions, plot of solution)
+    
+The simulate function tries to solve first with lower accuracy to increase speed.
+If it fails it will try to solve with higher accuracy.
+If the ode system can't be solved with an accuracy value of 1e-19
+the solver fails and return nothing.
+
+## Loopvals
+To make variation of parameters easier the loopvals function takes in a string with the parameter
+name to change and a vector of values that should be plugged in.
+It can also accept two strings and two vectors. It then tries all possible combinations of these parameters.
+The fourth object returned here is a basic plot containing all subplots.
+
+    Jgk = collect(0.0003:0.0005:0.005)
+    sols, mats, plots, _ = loopvals("Jgk", Jgk, settings)
+    
+    # or
+
+    gkca = [50, 800]
+    vpdh = [0.002, 0.009]
+    sols, mats, plots, p = loopvals("gkca", gkca, "vpdh", vpdh, settings)
+
