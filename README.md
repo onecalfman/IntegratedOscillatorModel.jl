@@ -26,7 +26,8 @@ or
     ```julia
     using Pkg
     Pkg.add(url="https://github.com/onecalfman/IntegratedOscillatorModel.jl")
-    ```julia
+    ```
+    
 ## Usage
 
 To use the module you have to create a settings object like in this example.
