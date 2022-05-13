@@ -19,16 +19,18 @@ This module can be installed from github.
 Either
 1. Enter the package mode by pressing ] in the julia repl
 2. type:
-
-        add https://github.com/onecalfman/IntegratedOscillatorModel.jl
+    ```julia
+    add https://github.com/onecalfman/IntegratedOscillatorModel.jl
+    ```
 or
-
+    ```julia
     using Pkg
     Pkg.add(url="https://github.com/onecalfman/IntegratedOscillatorModel.jl")
+    ```julia
 ## Usage
 
 To use the module you have to create a settings object like in this example.
-
+```julia
     settings = (
         ode_func      = sys,
         y0            = y0,
@@ -51,6 +53,7 @@ To use the module you have to create a settings object like in this example.
     );
     
     s, m, p = simulate(settings)
+```
 
 - ode_func
     This parameter is the function to numerical integrate.
@@ -85,14 +88,16 @@ To use the module you have to create a settings object like in this example.
     
 ## Meds
 To simulate different drugs and their effect on the beta cell, Med or ExpMed objects can be passed to the system.
-The consist of 
+The consist of
 
+```julia
     struct Med            
         time::Real        # time in minutes at which the medication is added
         type::String      # type of medication (if type is equal to a key in the params dict that value will be changed to the value of dose)
         dose::Float64     # dose of medication (varies with type -> refer to handle_medication function) 
         fade::Float64     # time * fade^(current_time - time) -> sets decline (fade only exists on ExpMed)
     end
+```
 
 The available stimulants are
 - tolbutamid
@@ -123,6 +128,7 @@ name to change and a vector of values that should be plugged in.
 It can also accept two strings and two vectors. It then tries all possible combinations of these parameters.
 The fourth object returned here is a basic plot containing all subplots.
 
+```julia
     Jgk = collect(0.0003:0.0005:0.005)
     sols, mats, plots, _ = loopvals("Jgk", Jgk, settings)
     
@@ -131,4 +137,4 @@ The fourth object returned here is a basic plot containing all subplots.
     gkca = [50, 800]
     vpdh = [0.002, 0.009]
     sols, mats, plots, p = loopvals("gkca", gkca, "vpdh", vpdh, settings)
-
+```
