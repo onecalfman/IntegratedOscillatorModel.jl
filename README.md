@@ -23,10 +23,10 @@ Either
     add https://github.com/onecalfman/IntegratedOscillatorModel.jl
     ```
 or
-    ```julia
-    using Pkg
-    Pkg.add(url="https://github.com/onecalfman/IntegratedOscillatorModel.jl")
-    ```
+```julia
+using Pkg
+Pkg.add(url="https://github.com/onecalfman/IntegratedOscillatorModel.jl")
+```
     
 ## Usage
 
