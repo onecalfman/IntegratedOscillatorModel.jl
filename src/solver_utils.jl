@@ -92,7 +92,7 @@ function simulate(system; iteration = 1)
     
     @time solution = trysolve(system, :meds ∈ getkeys(system), iteration)
     
-    if solution == nothing
+    if solution === nothing
         return solution
     end
     
