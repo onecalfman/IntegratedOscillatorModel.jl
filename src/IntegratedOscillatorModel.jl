@@ -2,8 +2,6 @@ __precompile__()
 
 module IntegratedOscillatorModel
 
-print("1.0.4")
-
 # import functions explicitly to override them
 import Base.sort
 import Base.max
