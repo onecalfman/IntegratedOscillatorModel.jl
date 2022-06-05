@@ -2,7 +2,7 @@ __precompile__()
 
 module IntegratedOscillatorModel
 
-print("1.0.3")
+print("1.0.4")
 
 # import functions explicitly to override them
 import Base.sort
@@ -16,10 +16,9 @@ using Reexport
 using DifferentialEquations
 using Parameters
 @reexport using LaTeXStrings
-@reexport using Plots; gr();
+@reexport using Plots; pyplot();
 @reexport using Plots.Measures
 
-include("plot_settings.jl")
 include("helper.jl")
 include("meds.jl")
 include("params.jl")
