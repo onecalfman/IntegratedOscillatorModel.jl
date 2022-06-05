@@ -5,6 +5,13 @@ import Base.min
 
 using DataStructures
 
+# identity function
+id(x) = x
+
+# remove elemnt from Array
+#remove!(x,e) = filter!(n -> n ≢ e, x)
+
+
 # returns a list of n times the vec concatenated
 function cycle(vec, n)
     return collect(Base.Iterators.flatten((Base.Iterators.repeated(vec, n))))
@@ -46,7 +53,7 @@ function dsort(d::Dict)
     return sd
 end
 
-function getkeys(v)
+function get_keys_or_fields(v)
     try
         return keys(v)
     catch

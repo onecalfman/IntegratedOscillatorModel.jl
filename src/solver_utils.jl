@@ -83,20 +83,24 @@ end
 # Takes a settings object (NamedTuple) and changes to parameters for the simulation
 # accordingly. It returns DiffEq Solution object, the time series for the 8 values
 # and a plot fo the solution.
-#simulate(system::System, iteration = 1) = simulate(to_named_tuple(system), iteration)
-function simulate(system; iteration = 1)
+
+function simulate(system :: System; iteration = 1)
     for (key,val) ∈ system.change_params
         system.params[key] = val;
     end
     system.params["meds"] = system.meds
     
-    @time solution = trysolve(system, :meds ∈ getkeys(system), iteration)
+    @time solution = trysolve(system, :meds ∈ get_keys_or_fields(system), iteration)
     
     if solution === nothing
         return solution
     end
     
+    # apply scaling factors to fit all parameters in one plot,
+    # since they are numerically unreliable anyways
     matrix = scale_solution_columns(solution)
+
+    pyplot()
     solution_plot = plot(
         solution.t/6000, 
         matrix[system.plot_params];
@@ -111,17 +115,20 @@ function simulate(system; iteration = 1)
         width=1.2,
         palette = :tab10,
         grid = false,
-        legend = (1.1,0.8),
+        legend = (1.1,0.2),
         rightmargin = 25mm,
         system.plot_args...)
     return (solution, matrix, solution_plot)
 end
 
+# maintina legacy compatablity with old named tuple args
+simulate(system) = System(system...)
+
 # can be called to put multiple vales for one parameter
 # and produce one solution for each
 # If multiple threads are available the simulations
 # will be run in parallel
-#loopvals(key::String, vals::Array, system :: System) = loopvals(vals,system,to_named_tuple(system))
+
 function loopvals(key::String, vals::Array, system)
     sols = Dict()
     sols_mat = Dict()
@@ -148,7 +155,6 @@ function loopvals(key::String, vals::Array, system)
     return (sols, sols_mat, plots, acc_plot)
 end
 
-#loopvals(key1::String, vals1::Vector, key2::String, vals2::Vector, system :: System) = loopvals(key1, vals1, key2, vals2, to_named_tuple(system))
 # same as above but for two chaning variables
 function loopvals(key1::String, vals1::Vector, key2::String, vals2::Vector, system)
     local sols::Dict{Any, Dict}     = Dict()
@@ -184,3 +190,7 @@ function loopvals(key1::String, vals1::Vector, key2::String, vals2::Vector, syst
     
     return (sols, sols_mat, plots, acc_plot)
 end
+
+# use multiple dispatch to avoid calls to loopvals
+simulate(system :: System, key1::String, vals1::Vector, key2::String, vals2::Vector) = loopvals(key1, vals1, key2, vals2, system)
+simulate(system :: System, key1::String, vals1::Vector) = loopvals(key1, vals1, system)
