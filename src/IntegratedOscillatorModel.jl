@@ -2,6 +2,7 @@ __precompile__()
 
 module IntegratedOscillatorModel
 
+println("1.0.5")
 # import functions explicitly to override them
 import Base.sort
 import Base.max
@@ -14,7 +15,8 @@ using Reexport
 using DifferentialEquations
 using Parameters
 @reexport using LaTeXStrings
-@reexport using Plots; pyplot();
+@reexport using Plots
+pyplot();
 @reexport using Plots.Measures
 
 include("helper.jl")
@@ -41,6 +43,14 @@ export vkf
 #export cycle
 export Med
 export ExpMed
+
+export Activa
+export Dz
+export Tolb
+export Tg
+export KCl
+export Glucose
+
 export Meds
 export trysolve
 export sys_const_pfk
