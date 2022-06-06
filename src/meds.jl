@@ -54,7 +54,7 @@ function Tolb(time, dose; fade = 1.0, duration = Inf, hill = true)
     activa = gen_default_activa(time, dose, fade = fade, duration = duration)
     activa.name = "Tolbutamid"
     if hill
-        activa.func = (x,_) -> params["gkatpbar"] * (1 - x^1/(x^1 + 1.35^1)
+        activa.func = (x,_) -> params["gkatpbar"] * (1 - x^1/(x^1 + 1.35^1))
     else 
         activa.func = (x,_) -> params["gkatpbar"] - 25 * x
     end
