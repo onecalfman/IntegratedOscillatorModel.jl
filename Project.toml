@@ -1,6 +1,6 @@
 name = "IntegratedOscillatorModel"
 uuid = "4a86908f-de09-412e-b134-eda2b762bb2a"
-authors = ["jonas <jonas@walkling.email>"]
+authors = ["Jonas Walkling <jonas@walkling.email>"]
 version = "0.1.1"
 
 [deps]
