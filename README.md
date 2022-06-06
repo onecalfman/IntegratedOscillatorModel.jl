@@ -7,135 +7,182 @@ The model describes the flux ot certain ions and molecules seen in the beta-cell
 pancreas. This is done by a non linear system of first order differential equations and it's
 goal is to get insights about the insulin exostosis.
 
+I will not explain the specific parameters of the model in this README.
+Please refer to the above mentioned papers and the coments in the params.jl file.
+
+If you want to gain a broader overview of beta-Cell modeling, I can recommend [this paper](https://doi.org/10.2337/dbi17-0004).
+
 # Goals
 The goal of this module is to enable easy manipulation of parameters within the model,
 to obtain insides about it's viability and inner workings.
 Fast calculation was also a concern so multithreading was implemented as well as
-helper functions to teal with the arising problems.
+helper functions to deal with the arising problems.
+A novel approach is, to include the simulation of active substances in the model.
 
-# How to use it
-## Installation
-This module can be installed from github.
-Either
-1. Enter the package mode by pressing ] in the julia repl
-2. type:
-    ```julia
-    add https://github.com/onecalfman/IntegratedOscillatorModel.jl
-    ```
-or
+# Usage
+The main function to use, is the simulate function.
+It accepts a System struct, that has the following structure:
+
+## System
 ```julia
-using Pkg
-Pkg.add(url="https://github.com/onecalfman/IntegratedOscillatorModel.jl")
+@with_kw struct System
+    ode_func      :: Function = sys 
+    y0            :: AbstractVecOrMat{Float64} = y0
+    time          :: Integer = 60
+    plot_args     :: Dict = Dict()
+    params        :: Dict{String,Any} = deepcopy(params)
+    plot_params   :: AbstractVector{Integer} = [1,2,3,4,5,6,7,8]
+    change_params :: Dict{String,Number} = Dict()
+    meds          :: Vector{Meds} = []
+end
 ```
-    
-## Usage
+The above struct uses the [Parameters.jl](https://github.com/mauro3/Parameters.jl) package.
 
-To use the module you have to create a settings object like in this example.
+- ode_func\
+    The function, that is used as the oder function. In most cases this parameter should stay the same.
+
+- y0 \
+    The starting values.
+    Another set of values (called y0_stat) contains the values to achive a almost constatn solution
+- time \
+    The simulation time in minutes
+- plot_args \
+    Extra arguments, that are used in the automatic plot generation
+- params \
+    The parameterset of the simulation.
+    This will be modified, so copy or deepcopy should be used to mittigate unwanted side effects.
+- plot_params \
+    The values of the ode system that shall be contained in the aut generated plot.
+    1. V - Membrane potential
+    2. N - Kalium
+    3. Ca - Calcium
+    4. Ca_er - Calcium (endoplasmatic reticulum)
+    5. Ca_m - Calcium (mitochondria)
+    6. ADP
+    7. F6P
+    8. FBP
+- change_params \
+    The key value pairs are used to modify some parameters given with the params field.
+- meds \
+    A list of Activa objects
+## Activa
+Activa represent active substances, that can be added to the system as further behavour modifiers.
+
 ```julia
-    settings = (
-        ode_func      = sys,
-        y0            = y0,
-        time          = 140 * 6000,
-        plot_args     = Dict(),
-        params        = deepcopy(params),
-        plot_params   = [1,3,6],
+@with_kw mutable struct Activa
+    # starting time in minutes
+    time :: Real
+    # duration in inutes
+    duration :: Number = Inf
+    # dosage
+    dose :: Float64
+    name :: String = ""
+    # will be used in en exponential function to simulate
+    # exponential dosage decrease or decline
+    fade :: Float64 = 1
+    # (dose, current_ode_state) -> Float64
+    # This function is used to calculate the effect of a active substance
+    func :: Function = id
+    # The name of the param, that is modified
+    param :: String
+end
+```
+
+## simulate
+The interface to use, is the simulate function.
+It accepts a Settings object and will run a simulation accordingly.
+The return value is a tuple, containg an OdeSolution object, a matrix
+containing the solution and a plot, of the solution.
+
+```julia
+using IntegratedOscillatorModel
+ode_solution, solution_matrix, solution_plot = simulate(System())
+```
+
+It is also possible to simulate different modifications in one command.
+In this scenario 3 dicts will be returned, containing the solutions, the matrices,
+and the plots. In addition a plot, of all solutions will be returned as the fourth value
+Because, this function uses the [@threads makro](https://docs.julialang.org/en/v1/manual/multi-threading/) to parralelize the operations, the SortedDict has a key for every value, given in the value array.
+
+```julia
+using IntegratedOscillatorModel
+sol_dict, mat_dict, plot_dict, overview_plot = simulate(
+    System(
+        time = 120
         change_params = Dict(
-               "vpdh" => 0.001,
-               "Jgk" => 0.001,
-               "gkca" => 800,
-            ),
+            "vpdh" => 0.001
+        )),
+    "Jgk",
+    [0.001, 0.05, 0.01]
+    )
+```
+
+At last, two keys and two lists can be provided like in the following example:
+```julia
+using IntegratedOscillatorModel
+sol_dict, mat_dict, plot_dict, overview_plot = simulate(
+    System(
+        time = 120
+        change_params = Dict(
+            "vpdh" => 0.001
+        )),
+    "Jgk",
+    [0.001, 0.05, 0.01]
+    "gca",
+    [200, 400, 800]
+    )
+```
+
+## simulate activa
+
+Four types of activa are currently predefined:
+
+| Function     | Active Substance | param |
+| :---------- | :----------------- | :---- |
+| Tolb         | Tolbuatmid | - gkatpbar |
+| Dz           | Diazoxide | + gkatpbar |
+| Glucose      | Glucose | + Jgk |
+| KCl          | KalciumChloride | + vk |
+
+#### Example
+
+```julia
+using IntegratedOscillatorModel
+sol = simulate(System(
+        time = 140,
+        plot_params = [1,3,6],
+        change_params = Dict(
+            "vpdh" => 0.001,
+            "Jgk" => 0.001,
+            "gkca" => 800
+        ),
         meds = [
-            Med(20 + 20, "tolbutamid",  50),
-            Med(20 + 40, "tolbutamid",  100),
-            Med(20 + 60, "tolbutamid",  200),
-            Med(20 + 80, "tolbutamid",  500),
-            Med(20 + 100, "tolbutamid",  1000),
-            ]
-    );
-    
-    s, m, p = simulate(settings)
+            Tolb(40,  50,   duration = 20),
+            Tolb(60,  100,  duration = 20),
+            Tolb(80,  200,  duration = 20),
+            Tolb(100, 500,  duration = 20),
+            Tolb(120, 1000, duration = 20),
+        ]
+    ),
+)
 ```
+# Inner Workings and Hints
 
-- ode_func
-    This parameter is the function to numerical integrate.
-    One could define variations of the here implemented sys function to create new behavior.
-- y0
-    starting conditions for the ode system.
-    y0 is also a variable with the default parameters.
-    In addition a y0_stat vector exists which has the initial settings to stay in a steady state
-- time
-    time in 100ms intervals
-- plot_args
-    currently defunct (should in theory allow to pass arguments for plotting)
-- params
-    the params to use for the calculation.
-    Note: it is important to deepcopy the default params since julia passes objects by reference
-    and the can be changed or deleted if passed directly
-- plot_params
-        a list of number representing the quantities that shall be plotted.
-        the numbers represent (in this order)
-        1. membrane potential
-        2. kalium
-        3. intracellular calcium
-        4. calcium (ectoplasmatic reticulum)
-        5. calcium (mitochondria)
-        6. adp
-        7. f6p
-        8. fbp
-- change_params
-    a dict which overwrites the given parameters temporarily
-- meds
-    accepts list of Med or ExpMed structs.
-    
-## Meds
-To simulate different drugs and their effect on the beta cell, Med or ExpMed objects can be passed to the system.
-The consist of
+### Tolerance
+Since the simulated ode system is quit fast oscillating, the sovler will assume an initial
+tolerance of abstol = 1e-6 and reltol = 1e-6.
+If the calculation failed because of a domain error (mostly a failed sqrt(-n)) the 
+tolerances will be decreased by 6 orders of magniuted.
+If the system can't by solved with a tolerance of 1e-18, the simulations failes and returns nothing.
 
-```julia
-    struct Med            
-        time::Real        # time in minutes at which the medication is added
-        type::String      # type of medication (if type is equal to a key in the params dict that value will be changed to the value of dose)
-        dose::Float64     # dose of medication (varies with type -> refer to handle_medication function) 
-        fade::Float64     # time * fade^(current_time - time) -> sets decline (fade only exists on ExpMed)
-    end
-```
+### Medication implementation
+A periodic callback is called every 100 steps in the simulation, and the medications are evaluated.
+An evaluation at every step would be very slow and error prone.
 
-The available stimulants are
-- tolbutamid
-- gkatpbar (maximal conductance of atp dependent k channels)
-- Dz (Diazoxide)
-- glucose
-- kserca (serca pump rate ca2+ er)
-- KCl
-- nifedipin (needs better fine tuning)
-- any key contained in the params dict
+### Reexports
+The Plots and LaTeXStrings modules are reexported.
 
-Additional types of stimulants can be added in the "handle_medication" function.
+### Legacy
+I originaly desinged the module to work with a named tuple of options.
+This syntax is still accpeted, to achive compatibility with my bachelors thesis simulations.
 
-## Simulate
-The simulate function takes a settings dict or named tuple.
-It returns a tuple of the form
-
-    (ODESolution, matrix of solutions, plot of solution)
-    
-The simulate function tries to solve first with lower accuracy to increase speed.
-If it fails it will try to solve with higher accuracy.
-If the ode system can't be solved with an accuracy value of 1e-19
-the solver fails and return nothing.
-
-## Loopvals
-To make variation of parameters easier the loopvals function takes in a string with the parameter
-name to change and a vector of values that should be plugged in.
-It can also accept two strings and two vectors. It then tries all possible combinations of these parameters.
-The fourth object returned here is a basic plot containing all subplots.
-
-```julia
-    Jgk = collect(0.0003:0.0005:0.005)
-    sols, mats, plots, _ = loopvals("Jgk", Jgk, settings)
-    
-    # or
-
-    gkca = [50, 800]
-    vpdh = [0.002, 0.009]
-    sols, mats, plots, p = loopvals("gkca", gkca, "vpdh", vpdh, settings)
-```
