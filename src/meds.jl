@@ -16,6 +16,7 @@ end
 # with potentially non linear active substance impact
 @with_kw mutable struct Activa
     time :: Real
+    duration :: Number = Inf
     dose :: Float64
     name :: String = ""
     fade :: Float64 = 1
@@ -25,49 +26,50 @@ end
 
 Meds = Union{Med,ExpMed,Activa}
 
-gen_default_activa(time, dose, fade = 1.0) =
+gen_default_activa(time, dose; fade = 1.0, duration = Inf) =
 Activa(
     time = time,
+    duration = duration,
     dose = dose,
     fade = fade,
     func = id,
     param = ""
 )
 
-function Dz(time, dose, fade = 1.0)
-    activa = gen_default_activa(time, dose, fade)
+function Dz(time, dose; fade = 1.0, duration = Inf)
+    activa = gen_default_activa(time, dose, fade = fade, duration = duration)
     activa.name = "Diaxozide"
     activa.func = (x,_) -> params["gkatpbar"] + 25 * x
     activa.param = "gkatpbar"
     return activa
 end
 
-function Tolb(time, dose, fade = 1.0)
-    activa = gen_default_activa(time, dose, fade)
+function Tolb(time, dose; fade = 1.0, duration = Inf)
+    activa = gen_default_activa(time, dose, fade = fade, duration = duration)
     activa.name = "Tolbutamid"
     activa.func = (x,_) -> params["gkatpbar"] - 25 * x
     activa.param = "gkatpbar"
     return activa
 end
 
-function Tg(time, dose, fade = 1.0)
-    activa = gen_default_activa(time, dose, fade)
+function Tg(time, dose; fade = 1.0, duration = Inf)
+    activa = gen_default_activa(time, dose, fade = fade, duration = duration)
     activa.name =  "Thapsigargin"
     activa.func = (x,_) -> params["kserca"] - 0.04x
     activa.param = "kserca"
     return activa
 end
 
-function KCl(time, dose, fade = 1.0)
-    activa = gen_default_activa(time, dose, fade)
+function KCl(time, dose; fade = 1.0, duration = Inf)
+    activa = gen_default_activa(time, dose, fade = fade, duration = duration)
     activa.name = "KCl"
     activa.func = (x,_) -> vkf((x > 4.8) ? x : params["vk"], 130)
     activa.param = "vk"
     return activa
 end
 
-function Glucose(time, dose, fade = 1.0)
-    activa = gen_default_activa(time, dose, fade)
+function Glucose(time, dose; fade = 1.0, duration = Inf)
+    activa = gen_default_activa(time, dose, fade = fade, duration = duration)
     activa.name = "Glucose"
     activa.func = (x,_) -> x / 1000
     activa.param = "Jgk"
@@ -79,10 +81,10 @@ end
 # calculates the effects of medications
 # by calling the func in the supplied activa
 function handle_medication(med :: Activa, i :: Any)
-    if 0 < med.dose
-        i.p[med.param] = med.func(med.dose, i)
-    else 
+    if isapprox(med.time + med.duration, i.t / 6000, rtol = 0.01) || med.dose ≤ 0
         i.p[med.param] = params[med.param]
+    else
+        i.p[med.param] = med.func(med.dose, i)
     end
 end
 
@@ -126,7 +128,13 @@ end
 
 # this version determains if the expoentialy falling
 # dosage is still over the minimal threshold
-function calc_dosage(m::Union{Activa,ExpMed}, i)
+function calc_dosage(m::ExpMed, i)
+    m.dose *= m.fade^((i.t - m.time*6000)/6000)
+    handle_medication(m, i)
+    return m.dose ≤ 0.01 ? true : false
+end
+
+function calc_dosage(m::Activa, i)
     m.dose *= m.fade^((i.t - m.time*6000)/6000)
     handle_medication(m, i)
     return m.dose ≤ 0.01 ? true : false
@@ -134,9 +142,13 @@ end
 
 function parse_medications(i)
     for m ∈ i.p["meds"]
-        if 6000 * m.time ≤ i.t
-            if calc_dosage(m, i);
-                filter!(n -> n ≢ m, i.p["meds"]) # remove "empty" Activa
+        if m.time ≤ i.t / 6000
+            if m isa Activa && m.time + m.duration ≥ i.t / 6000
+                calc_dosage(m,i)
+            elseif m isa Union{Med, ExpMed} && m.time ≤ i.t / 6000
+                if calc_dosage(m, i);
+                    filter!(n -> n ≢ m, i.p["meds"]) # remove "empty" Activa
+                end
             end
         end
     end

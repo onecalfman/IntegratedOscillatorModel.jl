@@ -73,28 +73,29 @@ function trysolve(system, callback, iteration)
     end
 end
 
-# Takes a settings object (NamedTuple) and changes to parameters for the simulation
-# accordingly. It returns DiffEq Solution object, the time series for the 8 values
-# and a plot fo the solution.
+function add_meds_to_plot(p, meds :: Vector{Union{Activa,ExpMed,Med}}, matrix)
+    plot_max = findmax(matrix)[1][1]
+    p
+    println("ok: " * string(plot_max))
+    for (i, m) ∈ enumerate(meds)
+            plot!(
+                [m.time, m.time + m.duration],
+                [plot_max + 20 * i, plot_max + 20 * i],
+                label = m.name,
+                linestyle = :dash
+                )
+            annotate!(m.time + m.duration / 2, plot_max + 20 * (i + 0.4), string(m.dose))
+            #println("med annotations cannot be added with legacy Med or ExpMed structs")
+    end
+    return p
+end
 
-function simulate(system :: System; iteration = 1)
-    for (key,val) ∈ system.change_params
-        system.params[key] = val;
-    end
-    system.params["meds"] = system.meds
-    
-    @time solution = trysolve(system, system.meds |> length > 0, iteration)
-    
-    if solution === nothing
-        return solution
-    end
-    
+function gen_solution_plot(solution :: ODESolution, system :: System)
+    gr()
     # apply scaling factors to fit all parameters in one plot,
     # since they are numerically unreliable anyways
     matrix = scale_solution_columns(solution)
-
-    gr()
-    solution_plot = plot(
+    p = plot(
         solution.t/6000, 
         matrix[system.plot_params];
         label = hcat(labels[system.plot_params]...),
@@ -109,10 +110,33 @@ function simulate(system :: System; iteration = 1)
         size = (900,600),
         palette = :tab10,
         grid = false,
-        legend = (1.1,0.8),
-        rightmargin = 25mm,
-        system.plot_args...)
-    return (solution, matrix, solution_plot)
+        legend = (1.07,0.8),
+        rightmargin = 42mm,
+        system.plot_args...
+        )
+        
+    print(p)
+    p = add_meds_to_plot(p, system.meds, matrix)
+    return p
+end
+
+# Takes a settings object (NamedTuple) and changes to parameters for the simulation
+# accordingly. It returns DiffEq Solution object, the time series for the 8 values
+# and a plot fo the solution.
+
+function simulate(system :: System; iteration = 1)
+    for (key,val) ∈ system.change_params
+        system.params[key] = val;
+    end
+    system.params["meds"] = system.meds
+    
+    @time solution = trysolve(system, system.meds |> length > 0, iteration)
+    
+    (solution === nothing) ? nothing : (
+        solution,
+        rowtocolumn(solution.u),
+        gen_solution_plot(solution,system)
+    )
 end
 
 # maintina legacy compatablity with old named tuple args
