@@ -1,3 +1,10 @@
+# Hill-Function
+# https://www.wikiwand.com/en/Dose%E2%80%93response_relationship
+# https://www.wikiwand.com/en/Hill_coefficient
+
+# according to 10.1111/j.1600-0773.1997.tb00286.x:
+hill_factory(n, ec50) = A -> 1 - A^n/(A^n + ec50^n)
+
 # The Med and Expmed are used to specify medication usage in the simulation
 struct Med            
     time::Real        # time in minutes at wich the medication is added
@@ -26,8 +33,7 @@ end
 
 Meds = Union{Med,ExpMed,Activa}
 
-gen_default_activa(time, dose; fade = 1.0, duration = Inf) =
-Activa(
+gen_default_activa(time, dose; fade = 1.0, duration = Inf) = Activa(
     time = time,
     duration = duration,
     dose = dose,
@@ -44,10 +50,14 @@ function Dz(time, dose; fade = 1.0, duration = Inf)
     return activa
 end
 
-function Tolb(time, dose; fade = 1.0, duration = Inf)
+function Tolb(time, dose; fade = 1.0, duration = Inf, hill = true)
     activa = gen_default_activa(time, dose, fade = fade, duration = duration)
     activa.name = "Tolbutamid"
-    activa.func = (x,_) -> params["gkatpbar"] - 25 * x
+    if hill
+        activa.func = (x,_) -> params["gkatpbar"] * (1 - x^1/(x^1 + 1.35^1)
+    else 
+        activa.func = (x,_) -> params["gkatpbar"] - 25 * x
+    end
     activa.param = "gkatpbar"
     return activa
 end
