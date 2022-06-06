@@ -1,10 +1,3 @@
-# library imports
-using Base.Threads
-using LaTeXStrings
-using DifferentialEquations
-using Plots; gr();
-using Plots.Measures
-
 # default labels and starting values for simulation
 const labels = [L"V" L"N" L"Ca" L"Ca_{er}" L"Ca_m" "ADP" "F6P" "FBP"];
 const y0 = [-60; 0; 0.1; 185; 100; 780; 60; 40];
@@ -90,7 +83,7 @@ function simulate(system :: System; iteration = 1)
     end
     system.params["meds"] = system.meds
     
-    @time solution = trysolve(system, :meds ∈ get_keys_or_fields(system), iteration)
+    @time solution = trysolve(system, system.meds |> length > 0, iteration)
     
     if solution === nothing
         return solution
@@ -100,7 +93,7 @@ function simulate(system :: System; iteration = 1)
     # since they are numerically unreliable anyways
     matrix = scale_solution_columns(solution)
 
-    pyplot()
+    gr()
     solution_plot = plot(
         solution.t/6000, 
         matrix[system.plot_params];
@@ -113,16 +106,17 @@ function simulate(system :: System; iteration = 1)
         legendfontsize = 13,
         framestyle = :default,
         width=1.2,
+        size = (900,600),
         palette = :tab10,
         grid = false,
-        legend = (1.1,0.2),
+        legend = (1.1,0.8),
         rightmargin = 25mm,
         system.plot_args...)
     return (solution, matrix, solution_plot)
 end
 
 # maintina legacy compatablity with old named tuple args
-simulate(system) = System(system...)
+simulate(system) = simulate(System(system...))
 
 # can be called to put multiple vales for one parameter
 # and produce one solution for each

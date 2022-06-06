@@ -1,10 +1,3 @@
-# import functions explicitly to override them
-import Base.sort
-import Base.max
-import Base.min
-
-using DataStructures
-
 # identity function
 id(x) = x
 

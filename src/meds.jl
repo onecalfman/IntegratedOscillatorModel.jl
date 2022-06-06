@@ -1,4 +1,3 @@
-include("helper.jl")
 # The Med and Expmed are used to specify medication usage in the simulation
 struct Med            
     time::Real        # time in minutes at wich the medication is added
@@ -26,46 +25,50 @@ end
 
 Meds = Union{Med,ExpMed,Activa}
 
-gen_default_activa(name, time, dose, fade = 1.0) =
+gen_default_activa(time, dose, fade = 1.0) =
 Activa(
     time = time,
     dose = dose,
-    name = name,
     fade = fade,
     func = id,
     param = ""
 )
 
 function Dz(time, dose, fade = 1.0)
-    activa = gen_default_activa("Diaxozide", time, dose, fade)
-    activa.func = (x,i) -> i["gkatpbar"] + 25 * x
+    activa = gen_default_activa(time, dose, fade)
+    activa.name = "Diaxozide"
+    activa.func = (x,_) -> params["gkatpbar"] + 25 * x
     activa.param = "gkatpbar"
     return activa
 end
 
 function Tolb(time, dose, fade = 1.0)
-    activa = gen_default_activa("Tolbutamid", time, dose, fade)
-    activa.func = (x,i) -> i["gkatpbar"] - 25 * x
+    activa = gen_default_activa(time, dose, fade)
+    activa.name = "Tolbutamid"
+    activa.func = (x,_) -> params["gkatpbar"] - 25 * x
     activa.param = "gkatpbar"
     return activa
 end
 
 function Tg(time, dose, fade = 1.0)
-    activa = gen_default_activa( "Thapsigargin", time, dose, fade)
-    activa.func = (x,i) -> i["kserca"] - 0.04x
+    activa = gen_default_activa(time, dose, fade)
+    activa.name =  "Thapsigargin"
+    activa.func = (x,_) -> params["kserca"] - 0.04x
     activa.param = "kserca"
     return activa
 end
 
 function KCl(time, dose, fade = 1.0)
-    activa = gen_default_activa("KCl", time, dose, fade)
+    activa = gen_default_activa(time, dose, fade)
+    activa.name = "KCl"
     activa.func = (x,_) -> vkf((x > 4.8) ? x : params["vk"], 130)
     activa.param = "vk"
     return activa
 end
 
 function Glucose(time, dose, fade = 1.0)
-    activa = gen_default_activa("Glucose", time, dose, fade)
+    activa = gen_default_activa(time, dose, fade)
+    activa.name = "Glucose"
     activa.func = (x,_) -> x / 1000
     activa.param = "Jgk"
     return activa
@@ -77,7 +80,7 @@ end
 # by calling the func in the supplied activa
 function handle_medication(med :: Activa, i :: Any)
     if 0 < med.dose
-        i.p[med.param] = med.func(med.dose, i.p)
+        i.p[med.param] = med.func(med.dose, i)
     else 
         i.p[med.param] = params[med.param]
     end
@@ -85,7 +88,7 @@ end
 
 
 # legacy medication handling
-function handle_medication(med, i::Any) 
+function handle_medication(med :: Union{Med, ExpMed}, i::Any) 
     if med.type ≡ "tolbutamid"
         if med.dose > 0
                 i.p["gkatpbar"] = params["gkatpbar"] - 0.02 * 1250 * med.dose
@@ -133,7 +136,7 @@ function parse_medications(i)
     for m ∈ i.p["meds"]
         if 6000 * m.time ≤ i.t
             if calc_dosage(m, i);
-                filter!(n -> n ≢ m, i.p["meds"])
+                filter!(n -> n ≢ m, i.p["meds"]) # remove "empty" Activa
             end
         end
     end

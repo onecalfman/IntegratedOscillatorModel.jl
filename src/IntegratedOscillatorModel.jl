@@ -1,8 +1,6 @@
 __precompile__()
 
 module IntegratedOscillatorModel
-
-println("1.0.5")
 # import functions explicitly to override them
 import Base.sort
 import Base.max
@@ -16,7 +14,6 @@ using DifferentialEquations
 using Parameters
 @reexport using LaTeXStrings
 @reexport using Plots
-pyplot();
 @reexport using Plots.Measures
 
 include("helper.jl")
