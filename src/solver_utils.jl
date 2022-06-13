@@ -62,6 +62,8 @@ function trysolve(system, callback, iteration)
                 maxiters = 1e6,
                 reltol   = tol,
                 abstol   = tol,
+                progress = true,
+                progress_steps = 1,
                 callback = cb
         )
     catch err
@@ -74,10 +76,9 @@ function trysolve(system, callback, iteration)
 end
 
 function add_meds_to_plot(p, meds :: Vector{Union{Activa,ExpMed,Med}}, matrix)
-    plot_max = findmax(matrix)[1][1]
+    plot_max = matrix |> Iterators.flatten |> collect |> max
     p
-    println("ok: " * string(plot_max))
-    for (i, m) ∈ enumerate(meds)
+    for (i, m) ∈ enumerate(filter(x -> x isa Activa, meds))
             plot!(
                 [m.time, m.time + m.duration],
                 [plot_max + 20 * i, plot_max + 20 * i],
