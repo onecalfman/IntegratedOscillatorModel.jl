@@ -28,7 +28,7 @@ const y0_stat = [ -60.486843436763024
     change_params :: Dict{String,Number} = Dict()
     meds :: Vector{Meds} = []
     logging :: Bool = true
-    solver :: SolverType = Tsit5()
+    solver :: DiffEqBase.DEAlgorithm = Tsit5()
 end
 
 
