@@ -28,7 +28,8 @@ const y0_stat = [ -60.486843436763024
     change_params :: Dict{String,Number} = Dict()
     meds :: Vector{Meds} = []
     logging :: Bool = true
-    solver :: DiffEqBase.DEAlgorithm = Tsit5()
+    solver :: Union{Nothing,DiffEqBase.DEAlgorithm} = Tsit5()
+    maxiters :: Int = 1e6
 end
 
 
@@ -61,7 +62,7 @@ function trysolve(system, callback, iteration)
         return solve(problem,
                 Tsit5(),
                 saveat   = 1,
-                maxiters = 1e6,
+                maxiters = system.maxiters,
                 reltol   = tol,
                 abstol   = tol,
                 callback = cb,
