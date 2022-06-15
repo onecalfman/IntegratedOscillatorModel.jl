@@ -27,6 +27,8 @@ const y0_stat = [ -60.486843436763024
     plot_params :: AbstractVector{Integer} = [1,2,3,4,5,6,7,8]
     change_params :: Dict{String,Number} = Dict()
     meds :: Vector{Meds} = []
+    logging :: Bool = true
+    solver :: SolverType = Tsit5()
 end
 
 
@@ -62,9 +64,9 @@ function trysolve(system, callback, iteration)
                 maxiters = 1e6,
                 reltol   = tol,
                 abstol   = tol,
-                progress = true,
+                callback = cb,
+                progress = system.logging,
                 progress_steps = 1,
-                callback = cb
         )
     catch err
         if isa(err, DomainError)

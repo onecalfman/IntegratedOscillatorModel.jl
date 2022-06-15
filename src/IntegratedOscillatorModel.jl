@@ -12,6 +12,10 @@ using DataStructures
 using Reexport
 using DifferentialEquations
 using Parameters
+using Logging: global_logger
+using TerminalLoggers: TerminalLogger
+global_logger(TerminalLogger())
+
 @reexport using LaTeXStrings
 @reexport using Plots
 @reexport using Plots.Measures
