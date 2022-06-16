@@ -19,17 +19,17 @@ const y0_stat = [ -60.486843436763024
 # System(t = 120) -> Struct with default parameters but 120 min length
 #
 @with_kw struct System
-    ode_func :: Function = sys  
-    y0 :: AbstractVecOrMat{Float64} = y0
-    time :: Integer = 60
-    plot_args :: Dict = Dict()
-    params :: Dict{String,Any} = deepcopy(params)
-    plot_params :: AbstractVector{Integer} = [1,2,3,4,5,6,7,8]
-    change_params :: Dict{String,Number} = Dict()
-    meds :: Vector{Meds} = []
-    logging :: Bool = true
-    solver :: Union{Nothing,DiffEqBase.DEAlgorithm} = Tsit5()
-    maxiters :: Int = 1e6
+    ode_func      :: Function                              = sys  
+    y0            :: AbstractVecOrMat{Float64}             = y0
+    time          :: Integer                               = 60
+    plot_args     :: Dict                                  = Dict()
+    params        :: Dict{String,Any}                      = deepcopy(params)
+    plot_params   :: AbstractVector{Integer}               = [1,2,3,4,5,6,7,8]
+    change_params :: Dict{String,Number}                   = Dict()
+    meds          :: Vector{Meds}                          = []
+    logging       :: Bool                                  = true
+    solver        :: Union{Nothing,DiffEqBase.DEAlgorithm} = Tsit5()
+    maxiters      :: Int                                   = 1e6
 end
 
 
@@ -78,8 +78,8 @@ function trysolve(system, callback, iteration)
     end
 end
 
-function add_meds_to_plot(p, meds :: Vector{Union{Activa,ExpMed,Med}}, matrix)
-    plot_max = matrix |> Iterators.flatten |> collect |> max
+function add_meds_to_plot(p, meds :: Vector{Union{Activa,ExpMed,Med}}, matrix, params)
+    plot_max = matrix[params] |> Iterators.flatten |> collect |> max
     p
     for (i, m) ∈ enumerate(filter(x -> x isa Activa, meds))
             plot!(
@@ -120,7 +120,7 @@ function gen_solution_plot(solution :: ODESolution, system :: System)
         )
         
     print(p)
-    p = add_meds_to_plot(p, system.meds, matrix)
+    p = add_meds_to_plot(p, system.meds, matrix, system.plot_params)
     return p
 end
 
