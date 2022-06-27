@@ -31,9 +31,12 @@ export simulate
 export loopvals
 export labels
 export y0
+export y0_analyzer_
 export y0_stat
 export sys
+export sys_analyzer
 #export pfk_activity
+export df_from_sol
 export params
 export sortedvalues
 export rowtocolumn

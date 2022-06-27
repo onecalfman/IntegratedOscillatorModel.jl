@@ -3,6 +3,14 @@ id(x) = x
 
 # remove elemnt from Array
 #remove!(x,e) = filter!(n -> n ≢ e, x)
+#
+function df_from_sol(sol)
+    col_names = [:t, :v, :n, :c, :cer, :cam, :adp, :f6p, :fbp, :rad, :atp, :mgadp, :adp3m, :atp4m, :amp, :topo, :bottom, :katpo, :minf, :ninf, :qinf, :ik, :ikca, :ikatp, :ica, :Jer, :Jm, :Jmem, :Jpfk, :sinfty, :Jpdh, ]
+    df = DataFrame(sol)
+    rename!(df, col_names)
+    df[1,10:end] = df[2,10:end]
+    return df
+end
 
 
 # returns a list of n times the vec concatenated

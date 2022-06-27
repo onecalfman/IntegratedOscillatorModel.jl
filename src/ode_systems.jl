@@ -225,3 +225,118 @@ function sys_katpo(dy, y, params, t)
     dy[7] = 0.3*(params["Jgk"]-Jpfk)
     dy[8] = Jpfk-Jpdh/2
 end
+
+# |  9 | rad   |
+# | 10 | atp   |
+# | 11 | mgadp |
+# | 12 | adp3m |
+# | 13 | atp4m |
+# | 14 | amp   |
+# | 15 | topo  |
+# | 16 | bottom|
+# | 17 | katpo |
+# | 18 | minf  |
+# | 19 | ninf  |
+# | 20 | qinf  |
+# | 21 | ik    |
+# | 22 | ikca  |
+# | 23 | ikatp |
+# | 24 | ica   |
+# | 25 | Jer   |
+# | 26 | Jm    |
+# | 27 | Jmem  |
+# | 28 | Jpfk  |
+# | 29 | sinfty|
+# | 30 | Jpdh  |
+
+function sys_analyzer(dy, y, params, t)
+    #v, n, c, cer, cam, adp, f6p, fbp = y
+
+    # calc atp/adp ratios
+    y[9]     = sqrt(-4*y[6]^2+(params["atot"]-y[6])^2);
+    y[10]     = (params["atot"]+y[9]-y[6])/2;
+    y[11]   = 0.165*y[6]; # magnesium adp complex
+    y[12]   = 0.135*y[6]; # adp for transport into matrix  (löffler petrides s. 238)
+    y[13]   = 0.05 *y[10];  # atp for transport into matrix (löffler petrides s. 238)
+    y[14]     = y[6]^2/y[10]; # adenosine monophosphate
+    
+    # flux activation functions
+    y[15]    = 0.08+0.89*y[11]^2/params["kdd"]^2+0.16*y[11]/params["kdd"] ;
+    y[16] = (1+y[11]/params["kdd"])^2*(1+y[13]/params["ktt"] + y[12]/params["ktd"]) ;
+    y[17]   = y[15]/y[16];                                                 # I_K(ATP) activation function
+    y[18]    = 1/(1+exp((params["vm"]-y[1])/params["sm"]));                  # ca pmca activation function
+    y[19]    = 1/(1+exp((params["nin"]-y[1])/params["sn"]));                 # rectifing current acti
+    y[20]    = y[3]^2/(params["kd"]^2+y[3]^2);                               # I_K(Ca) activation functin
+    # fluxes                                                                   
+    
+    y[21]      = params["gk"]*y[2]*(y[1]-params["vk"]);                        # rectifying current
+    y[22]    = -params["gkca"]*y[20]*(params["vk"]-y[1]);                     # ca dependent k current
+
+    y[23]   = params["gkatpbar"]*y[17]*(y[1]-params["vk"]);                 # k flux atp dependent
+    y[24]     = params["gca"]*y[18]*(y[1]-params["vca"]);                      # ca flux for action potentials
+    
+    y[25]     = params["kserca"]*y[3] - params["pleak"]*(y[4]-y[3]);          # ca flux density across er membrane
+    y[26]      = params["kuni"]*y[3] - params["knaca"]*(y[5]-y[3]);            # ca flux density across mitochonidium
+    y[27]    = -(params["alpha"]/params["vcyt"]*y[24] + params["kpmca"]*y[3]); # ca flux density (cell membrane)
+                                                                               
+    # glycolitic oscillations                                                                                       
+    y[28]    = pfk_activity(y[10], y[6], y[7], y[8], y[14], params)              # pfk activity
+    y[29]  = y[5]/(y[5]+params["kCaPDH"]);                                 # Michaelis-Menten function   
+    y[30]    = params["vpdh"]*y[29]*sqrt(y[8]);                             # pdh activity
+    
+    #save_stats(y[14], atp, y[17], y[18], y[19], y[20], y[21], y[22], y[25], y[23], y[26], y[24], y[27], y[28], y[29], y[30]);
+    dy[1] = -(y[24] + y[21] + y[22] + y[23])/params["Cm"]
+    dy[2] = -(y[2]-y[19])/params["taun"]
+    dy[3] = params["fca"]*(y[27] - y[26] - y[25])
+    dy[4] = params["fca"]*params["sigmaer"]*y[25]
+    dy[5] = params["fca"]*params["sigmam"]*y[26]
+    dy[6] = (y[10]-exp((1+2.2 * y[30]/(y[30]+0.05)) * (1-y[3]/0.35))*y[6])/params["taua"]
+    dy[7] = 0.3*(params["Jgk"]-y[28])
+    dy[8] = y[28]-y[30]/2
+end
+
+function sys_analyzer(dy, y, params, t)
+    #v, n, c, cer, cam, adp, f6p, fbp = y
+
+    # calc atp/adp ratios
+    y[9]  = sqrt(-4*y[6]^2+(params["atot"]-y[6])^2);
+    y[10] = (params["atot"]+y[9]-y[6])/2;
+    y[11] = 0.165*y[6]; # magnesium adp complex
+    y[12] = 0.135*y[6]; # adp for transport into matrix  (löffler petrides s. 238)
+    y[13] = 0.05 *y[10];  # atp for transport into matrix (löffler petrides s. 238)
+    y[14] = y[6]^2/y[10]; # adenosine monophosphate
+    
+    # flux activation functions
+    y[15] = 0.08+0.89*y[11]^2/params["kdd"]^2+0.16*y[11]/params["kdd"] ;
+    y[16] = (1+y[11]/params["kdd"])^2*(1+y[13]/params["ktt"] + y[12]/params["ktd"]) ;
+    y[17] = y[15]/y[16];                                                 # I_K(ATP) activation function
+    y[18] = 1/(1+exp((params["vm"]-y[1])/params["sm"]));                  # ca pmca activation function
+    y[19] = 1/(1+exp((params["nin"]-y[1])/params["sn"]));                 # rectifing current acti
+    y[20] = y[3]^2/(params["kd"]^2+y[3]^2);                               # I_K(Ca) activation functin
+    # fluxes                                                                   
+    
+    y[21] = params["gk"]*y[2]*(y[1]-params["vk"]);                        # rectifying current
+    y[22] = -params["gkca"]*y[20]*(params["vk"]-y[1]);                     # ca dependent k current
+
+    y[23] = params["gkatpbar"]*y[17]*(y[1]-params["vk"]);                 # k flux atp dependent
+    y[24] = params["gca"]*y[18]*(y[1]-params["vca"]);                      # ca flux for action potentials
+    
+    y[25] = params["kserca"]*y[3] - params["pleak"]*(y[4]-y[3]);          # ca flux density across er membrane
+    y[26] = params["kuni"]*y[3] - params["knaca"]*(y[5]-y[3]);            # ca flux density across mitochonidium
+    y[27] = -(params["alpha"]/params["vcyt"]*y[24] + params["kpmca"]*y[3]); # ca flux density (cell membrane)
+                                                                               
+    # glycolitic oscillations                                                                                       
+    y[28] = pfk_activity(y[10], y[6], y[7], y[8], y[14], params)              # pfk activity
+    y[29] = y[5]/(y[5]+params["kCaPDH"]);                                 # Michaelis-Menten function   
+    y[30] = params["vpdh"]*y[29]*sqrt(y[8]);                             # pdh activity
+    
+    #save_stats(y[14], atp, y[17], y[18], y[19], y[20], y[21], y[22], y[25], y[23], y[26], y[24], y[27], y[28], y[29], y[30]);
+    dy[1] = -(y[24] + y[21] + y[22] + y[23])/params["Cm"]
+    dy[2] = -(y[2]-y[19])/params["taun"]
+    dy[3] = params["fca"]*(y[27] - y[26] - y[25])
+    dy[4] = params["fca"]*params["sigmaer"]*y[25]
+    dy[5] = params["fca"]*params["sigmam"]*y[26]
+    dy[6] = (y[10]-exp((1+2.2 * y[30]/(y[30]+0.05)) * (1-y[3]/0.35))*y[6])/params["taua"]
+    dy[7] = 0.3*(params["Jgk"]-y[28])
+    dy[8] = y[28]-y[30]/2
+end

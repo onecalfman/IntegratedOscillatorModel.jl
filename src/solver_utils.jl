@@ -1,6 +1,7 @@
 # default labels and starting values for simulation
 const labels = [L"V" L"N" L"Ca" L"Ca_{er}" L"Ca_m" "ADP" "F6P" "FBP"];
 const y0 = [-60; 0; 0.1; 185; 100; 780; 60; 40];
+const y0_analyzer = [-60, 0, 0.1, 185, 100, 780, 60, 40, map(x -> x, 9:30)];
 # y0_stat produces a stationary solution
 const y0_stat = [ -60.486843436763024
                     0.0001367295835481462
